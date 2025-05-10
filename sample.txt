@@ -1,0 +1,94 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Path to the results.csv file
+results_path = 'C:/Users/MSI/Documents/Thesis_Project/Automste_Testing_DeepSeek_Model/word-detect-yolo.v1i.yolov11-obb/run1/results.csv'
+
+# Load the CSV file
+df = pd.read_csv(results_path)
+
+# Strip any leading/trailing whitespace from column names
+df.columns = df.columns.str.strip()
+
+# Plot mAP@0.5 and mAP@0.5:0.95
+plt.figure(figsize=(10, 6))
+plt.plot(df['metrics/mAP50(B)'], label='mAP@0.5', color='blue', linewidth=2)
+plt.plot(df['metrics/mAP50-95(B)'], label='mAP@0.5:0.95', color='orange', linewidth=2)
+plt.xlabel('Epoch', fontsize=12)
+plt.ylabel('mAP', fontsize=12)
+plt.title('Model Accuracy (mAP) Over Epochs', fontsize=14)
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Plot precision and recall
+plt.figure(figsize=(10, 6))
+plt.plot(df['metrics/precision(B)'], label='Precision', color='green', linewidth=2)
+plt.plot(df['metrics/recall(B)'], label='Recall', color='red', linewidth=2)
+plt.xlabel('Epoch', fontsize=12)
+plt.ylabel('Score', fontsize=12)
+plt.title('Precision and Recall Over Epochs', fontsize=14)
+plt.legend()
+plt.grid(True)
+plt.show()
+
+==============================================================================
+
+from ultralytics import YOLO
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Load the trained model
+model = YOLO('C:/Users/MSI/Documents/Thesis_Project/Automste_Testing_DeepSeek_Model/word-detect-yolo.v1i.yolov11-obb/run1/weights/best.pt')
+
+# Run validation on validation set
+val_results = model.val(data="C:/Users/MSI/Documents/Thesis_Project/Automste_Testing_DeepSeek_Model/word-detect-yolo.v1i.yolov11-obb/data.yaml")
+
+# Run validation on test set
+test_results = model.val(data="C:/Users/MSI/Documents/Thesis_Project/Automste_Testing_DeepSeek_Model/word-detect-yolo.v1i.yolov11-obb/data.yaml", split='test')
+
+# Collect metrics, ensuring scalar values
+metrics = {
+    'Set': ['Validation', 'Test'],
+    'Precision': [np.mean(val_results.box.p).item() if isinstance(val_results.box.p, (np.ndarray, list)) else val_results.box.p,
+                  np.mean(test_results.box.p).item() if isinstance(test_results.box.p, (np.ndarray, list)) else test_results.box.p],
+    'Recall': [np.mean(val_results.box.r).item() if isinstance(val_results.box.r, (np.ndarray, list)) else val_results.box.r,
+               np.mean(test_results.box.r).item() if isinstance(test_results.box.r, (np.ndarray, list)) else test_results.box.r],
+    'mAP@0.5': [val_results.box.map50, test_results.box.map50],  # map50 is typically a scalar
+    'mAP@0.5:0.95': [val_results.box.map, test_results.box.map]  # map is typically a scalar
+}
+
+# Plot bar chart
+fig, ax = plt.subplots(figsize=(10, 6))
+bar_width = 0.2
+index = np.arange(len(metrics['Set']))
+
+plt.bar(index, metrics['Precision'], bar_width, label='Precision', color='green')
+plt.bar(index + bar_width, metrics['Recall'], bar_width, label='Recall', color='red')
+plt.bar(index + 2 * bar_width, metrics['mAP@0.5'], bar_width, label='mAP@0.5', color='blue')
+plt.bar(index + 3 * bar_width, metrics['mAP@0.5:0.95'], bar_width, label='mAP@0.5:0.95', color='orange')
+
+plt.xlabel('Dataset', fontsize=12)
+plt.ylabel('Score', fontsize=12)
+plt.title('Model Accuracy Metrics (Validation vs Test)', fontsize=14)
+plt.xticks(index + 1.5 * bar_width, metrics['Set'])
+plt.legend()
+plt.grid(True, axis='y')
+plt.show()
+
+# Print metrics for reference
+print("Validation Metrics:")
+print(f"Precision: {metrics['Precision'][0]:.3f}")
+print(f"Recall: {metrics['Recall'][0]:.3f}")
+print(f"mAP@0.5: {metrics['mAP@0.5'][0]:.3f}")
+print(f"mAP@0.5:0.95: {metrics['mAP@0.5:0.95'][0]:.3f}")
+
+print("\nTest Metrics:")
+print(f"Precision: {metrics['Precision'][1]:.3f}")
+print(f"Recall: {metrics['Recall'][1]:.3f}")
+print(f"mAP@0.5: {metrics['mAP@0.5'][1]:.3f}")
+print(f"mAP@0.5:0.95: {metrics['mAP@0.5:0.95'][1]:.3f}")
+
+
+===========================================================
+results = model.predict(image_path, conf=0.2)
