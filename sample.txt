@@ -92,3 +92,45 @@ print(f"mAP@0.5:0.95: {metrics['mAP@0.5:0.95'][1]:.3f}")
 
 ===========================================================
 results = model.predict(image_path, conf=0.2)
+=============================
+%matplotlib inline
+
+from ultralytics import YOLO
+import matplotlib.pyplot as plt
+
+# Load the trained model
+model = YOLO('C:/Users/MSI/Documents/Thesis_Project/Automste_Testing_DeepSeek_Model/word-detect-yolo.v1i.yolov11-obb/run1/weights/best.pt')
+
+# Run validation
+val_results = model.val(data="C:/Users/MSI/Documents/Thesis_Project/Automste_Testing_DeepSeek_Model/word-detect-yolo.v1i.yolov11-obb/data.yaml")
+
+# Display accuracy metrics
+print("YOLOv11 Model Accuracy Metrics:")
+print(f"Precision: {val_results.results_dict['metrics/precision(B)']:.3f}")
+print(f"Recall: {val_results.results_dict['metrics/recall(B)']:.3f}")
+print(f"mAP@0.5: {val_results.results_dict['metrics/mAP50(B)']:.3f}")
+print(f"mAP@0.5:0.95: {val_results.results_dict['metrics/mAP50-95(B)']:.3f}")
+
+# Extract metrics from results
+metrics = {
+    "Precision": val_results.results_dict['metrics/precision(B)'],
+    "Recall": val_results.results_dict['metrics/recall(B)'],
+    "mAP@0.5": val_results.results_dict['metrics/mAP50(B)'],
+    "mAP@0.5:0.95": val_results.results_dict['metrics/mAP50-95(B)']
+}
+
+# Plotting
+plt.figure(figsize=(8, 5))
+plt.plot(list(metrics.keys()), list(metrics.values()), marker='o', linestyle='-', color='blue')
+plt.ylim(0, 1.05)
+plt.title("YOLOv11 Model Accuracy Metrics")
+plt.xlabel("Metric")
+plt.ylabel("Score")
+plt.grid(True)
+
+# Annotate data points
+for i, (metric, value) in enumerate(metrics.items()):
+    plt.text(i, value + 0.02, f"{value:.2f}", ha='center')
+
+plt.tight_layout()
+plt.show()
