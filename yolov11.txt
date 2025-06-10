@@ -1,0 +1,68 @@
+%matplotlib inline
+import cv2
+import matplotlib.pyplot as plt
+from ultralytics import YOLO
+
+# === Load the trained YOLO model ===
+model = YOLO('C:/Users/MSI/Documents/Thesis_Project/Automste_Testing_DeepSeek_Model/word-detect-yolo.v1i.yolov11-obb/run13/weights/best.pt')
+
+# === Predict on a single image ===
+image_path = 'students_rotated_1.png'
+results = model.predict(image_path)
+
+# 🖼️ Plot the detections
+annotated_frame = results[0].plot(
+    labels=True,
+    font_size=8,
+    conf=True,
+    boxes=True,
+    line_width=1
+)
+
+# 📊 Display the detected image with bounding boxes
+plt.figure(figsize=(16, 16))
+plt.imshow(cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB))
+plt.axis("off")
+plt.title("Predictions on Image")
+plt.show()
+
+# 🧠 Get the confidence scores
+# confidences = results[0].boxes.conf
+# if confidences is not None and len(confidences) > 0:
+#     avg_confidence = confidences.mean().item()
+#     print(f"Average confidence (accuracy) for this image: {avg_confidence:.2f}")
+# else:
+#     print("No detections to calculate confidence.")
+
+# === Run validation on the dataset ===
+val_results = model.val(data="C:/Users/MSI/Documents/Thesis_Project/Automste_Testing_DeepSeek_Model/word-detect-yolo.v1i.yolov11-obb/data.yaml")
+
+# 🧪 Print accuracy metrics
+print("\nYOLOv11 Model Accuracy Metrics:")
+print(f"Precision: {val_results.results_dict['metrics/precision(B)']:.3f}")
+print(f"Recall: {val_results.results_dict['metrics/recall(B)']:.3f}")
+print(f"mAP@0.5: {val_results.results_dict['metrics/mAP50(B)']:.3f}")
+print(f"mAP@0.5:0.95: {val_results.results_dict['metrics/mAP50-95(B)']:.3f}")
+
+# 📈 Plot accuracy metrics
+metrics = {
+    "Precision": val_results.results_dict['metrics/precision(B)'],
+    "Recall": val_results.results_dict['metrics/recall(B)'],
+    "mAP@0.5": val_results.results_dict['metrics/mAP50(B)'],
+    "mAP@0.5:0.95": val_results.results_dict['metrics/mAP50-95(B)']
+}
+
+plt.figure(figsize=(8, 5))
+plt.plot(list(metrics.keys()), list(metrics.values()), marker='o', linestyle='-', color='blue')
+plt.ylim(0, 1.05)
+plt.title("YOLOv11 Model Accuracy Metrics")
+plt.xlabel("Metric")
+plt.ylabel("Score")
+plt.grid(True)
+
+# Annotate values on points
+for i, (metric, value) in enumerate(metrics.items()):
+    plt.text(i, value + 0.02, f"{value:.2f}", ha='center')
+
+plt.tight_layout()
+plt.show()
